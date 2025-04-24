@@ -1,71 +1,8 @@
-//basic io,string modification, and system call functions
-#include <iostream>
-#include <ncurses.h>
-#include <string>
+#include "setup.hpp"
+//atomic<int> pattern[10];
+//atomic<bool> run(true);
+//mutex grid_mutex;
 
-#include <array> // safer array modifications
-
-#include <thread> // threads
-#include <atomic> // thread variables
-#include <chrono> // wait function
-#include <mutex> // safer array access
-
-using namespace std;
-void printGrid(char grid[20][10]);
-void drop(char grid[20][10]);
-void resetGrid(char grid[20]);
-
-void initNcurses();
-
-void mov(char grid[20][10]);
-void shiftLeft();
-void shiftRight();
-
-atomic<int> pattern[10];
-atomic<bool> run(true);
-mutex grid_mutex;
-
-
-int main(){
-
-    char grid[20][10];
-
-    for(int i=0; i<20; ++i){
-        for(int j=0; j<10; ++j){
-            grid[i][j] = ' ';
-        }
-    }
-
-standby:
-    run.store(true);
-    resetGrid(grid[19]);
-    
-    initNcurses();
-    clear();
-    printw("Ready? (press any key)");
-    refresh();
-    getch();
-    
-    nodelay(stdscr, TRUE);
-    timeout(5);
-    
-    int init[10] = {0,0,0,1,1,1,1,0,0,0};
-    for(int k=0; k<10; ++k) pattern[k].store(init[k]);
-
-    thread worker(drop,grid);
-    thread listen(mov,grid);
-    worker.join();
-    listen.join();
-
-    //cout << "\nbye bye\n";
-    nodelay(stdscr, FALSE);
-    printw("Replay? (y/n)");
-    refresh();
-    char inp = getch();
-    if(inp == 'y') goto standby;
-    endwin();
-    return 0;
-}
 
 void initNcurses(){
     initscr();
@@ -132,7 +69,3 @@ void shiftRight(){
     pattern[0].store(0);
     ++index;
 }
-
-
-
-

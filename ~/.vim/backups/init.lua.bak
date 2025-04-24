@@ -36,14 +36,14 @@ vim.o.backupdir = "~/.vim/backups"  -- Directory for backup files
 vim.o.backupext = ".bak"           -- Extension for backup files
 
 -- Catppuccin
- vim.cmd.colorscheme "catppuccin-macchiato" --*
+-- vim.cmd.colorscheme "catppuccin-macchiato" --*
 -- vim.cmd.colorscheme "catppuccin-frappe"
 -- vim.cmd.colorscheme "catppuccin-mocha" --*
 -- vim.cmd.colorscheme "catppuccin-latte"
 
 -- Nightfox
 -- vim.cmd.colorscheme "dayfox"
--- vim.cmd.colorscheme "dawnfox"   
+ vim.cmd.colorscheme "dawnfox"   
 
 -- vim.cmd.colorscheme "duskfox"  --*
 -- vim.cmd.colorscheme "terafox" --*

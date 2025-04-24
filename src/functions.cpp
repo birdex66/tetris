@@ -1,0 +1,71 @@
+#include "setup.hpp"
+atomic<int> pattern[10];
+atomic<bool> run(true);
+mutex grid_mutex;
+
+
+void initNcurses(){
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr,TRUE);
+    curs_set(0);
+}
+
+void drop(char grid[20][10]){
+    while(run.load()){
+        for(int i=0; i<20; ++i){
+            unique_lock<mutex> lock(grid_mutex);
+            for(int j=0; j<10; ++j) if(pattern[j].load()>0) grid[i][j] = '1'; 
+            lock.unlock();
+            this_thread::sleep_for(chrono::milliseconds(800));
+            if(i!=19) resetGrid(grid[i]);
+        }
+        run.store(false);
+        this_thread::sleep_for(chrono::milliseconds(900));
+    }
+}
+
+void resetGrid(char grid[]){
+    for(int j=0; j<10; ++j){
+        grid[j] = ' ';
+    }
+}
+
+void printGrid(char grid[20][10]){
+    clear();
+    string quickGrid = "";
+    for(int i=0; i<20; ++i){
+        quickGrid += '|';
+        for(int j=0; j<10; ++j) quickGrid += grid[i][j]; //.append(to_string(grid[i][j]));
+        quickGrid += "|\n";   //.append("\n");
+    }
+    quickGrid += "============";
+    printw("%s",quickGrid.c_str());
+    //printw("%s",quickGrid);
+    refresh();
+}
+
+static int index;
+
+void mov(char grid[20][10]){
+    index = 3;
+    while(run.load()){
+        char input = getch();
+        if(input == 'a' && index > 0) shiftLeft();
+        else if(input == 'd' && index < 6) shiftRight();
+        printGrid(grid);
+    }
+}
+
+void shiftLeft(){
+    for(int i=0; i<9; ++i) pattern[i].store(pattern[i+1].load()); 
+    pattern[9].store(0);
+    --index;
+}
+
+void shiftRight(){
+    for(int i=9; i>0; --i) pattern[i].store(pattern[i-1].load()); 
+    pattern[0].store(0);
+    ++index;
+}
