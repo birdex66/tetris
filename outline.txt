@@ -1,0 +1,37 @@
+TETRIS REQUIREMENT:
+
+2d array [10][20]
+Block Types:
+
+I-Block
+XXXX 
+
+J-Block
+X
+XXXX 
+
+L-Block
+   X
+XXXX
+
+O-Block
+XX
+XX
+
+S-Block
+ XX
+XX
+
+T-Block
+ X
+XXX
+
+Z-Block
+XX
+ XX
+
+Random Blocks
+Score,Hi-Score
+HitBoxes
+
+
