@@ -4,6 +4,8 @@ atomic<int> curBlock[4][10];
 atomic<bool> run(true);
 mutex grid_mutex;
 static int stp;
+static int indL;
+static int indR;
 
 void initNcurses(){
     initscr();
@@ -17,12 +19,17 @@ void initalizePattern(int patternIndex){
     if(patternIndex == 0) stp = 21;
     else stp = 20;
 
+    indL = 100;
+    indR = -100;
+
     for(int i=0; i<4; ++i){
         for(int j=0; j<10; ++j){
-            curBlock[i][j].store((*allBlocks[patternIndex])[i][j]);
+            int fer = (*allBlocks[patternIndex])[i][j];
+            curBlock[i][j].store(fer);//(*allBlocks[patternIndex])[i][j]);
+            if(fer == 1 && j < indL) indL = j;
+            if(fer  == 1 && j > indR) indR = j;
         }
     }
-    // for(int k=0; k<10; ++k) curBlock[k].store(init[k]);
 }
 
 void drop(char grid[20][10]){
@@ -73,14 +80,12 @@ void printGrid(char grid[20][10]){
     refresh();
 }
 
-static int ind;
 
 void mov(char grid[20][10]){
-    ind = 3;
     while(run.load()){
         char input = getch();
-        if(input == 'a' && ind > 0) shiftLeft();
-        else if(input == 'd' && ind < 6) shiftRight();
+        if(input == 'a' && indL > 0) shiftLeft();
+        else if(input == 'd' && indR < 9) shiftRight();
         printGrid(grid);
     }
 }
@@ -92,7 +97,8 @@ void shiftLeft(){
         }
         curBlock[i][9].store(0);
     }
-    --ind;
+    --indL;
+    --indR;
 }
 
 void shiftRight(){
@@ -102,6 +108,7 @@ void shiftRight(){
         }
         curBlock[i][0].store(0);
     }
-    ++ind;
+    ++indL;
+    ++indR;
 }
 
