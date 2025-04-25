@@ -24,9 +24,57 @@ void mov(char grid[20][10]);
 void shiftLeft();
 void shiftRight();
 
-extern atomic<int> pattern[10];
 extern atomic<bool> run;
 extern mutex grid_mutex;
+//extern atomic<int> pattern[10];
+extern atomic<int> curBlock[10];
+
+static int I_block[4][10] = {
+                            {0,0,0,1,1,1,1,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+static int J_block[4][10] = {
+                            {0,0,0,1,0,0,0,0,0,0},
+                            {0,0,0,1,1,1,1,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+static int L_block[4][10] = {
+                            {0,0,0,0,0,0,1,0,0,0},
+                            {0,0,0,1,1,1,1,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+static int O_block[2][10] = {
+                            {0,0,0,0,1,1,0,0,0,0},
+                            {0,0,0,0,1,1,0,0,0,0}
+};
+
+static int S_block[3][10] = {
+                            {0,0,0,0,1,1,0,0,0,0},
+                            {0,0,0,1,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+static int T_block[3][10] = {
+                            {0,0,0,0,1,0,0,0,0,0},
+                            {0,0,0,1,1,1,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+static int Z_block[4][10] = {
+                            {0,0,0,0,1,1,0,0,0,0},
+                            {0,0,0,0,0,1,1,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+//extern atomic<int> nextBlock
+//extern atomic<int> curBlock
 
 #endif
 

@@ -24,7 +24,7 @@ standby:
     timeout(5);
     
     int init[10] = {0,0,0,1,1,1,1,0,0,0};
-    for(int k=0; k<10; ++k) pattern[k].store(init[k]);
+    for(int k=0; k<10; ++k) curBlock[k].store(init[k]);
 
     thread worker(drop,grid);
     thread listen(mov,grid);

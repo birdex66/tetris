@@ -9,7 +9,7 @@ void initNcurses(){
     cbreak();
     noecho();
     keypad(stdscr,TRUE);
-    curs_set(0);
+    cur_set(0);
 }
 
 void drop(char grid[20][10]){

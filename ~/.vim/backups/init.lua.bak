@@ -43,10 +43,10 @@ vim.o.backupext = ".bak"           -- Extension for backup files
 
 -- Nightfox
 -- vim.cmd.colorscheme "dayfox"
- vim.cmd.colorscheme "dawnfox"   
+-- vim.cmd.colorscheme "dawnfox"   
 
 -- vim.cmd.colorscheme "duskfox"  --*
--- vim.cmd.colorscheme "terafox" --*
+ vim.cmd.colorscheme "terafox" --*
 -- vim.cmd.colorscheme "nordfox"  --*
 -- vim.cmd.colorscheme "nightfox" --*  
 -- vim.cmd.colorscheme "carbonfox" --*

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ "$#" -ne 1 ]; then
-    echo "Argument expected"
-    if [ "$#" -lt 1 ]; then
+    echo "One argument expected"
+    if [ "$#" -lt 2 ]; then
         echo "Specify a compilation type!!"
         echo "Default Type:                        0"
         echo "Mid-Speed Type (Safer defaults):     1"
@@ -12,24 +12,23 @@ if [ "$#" -ne 1 ]; then
 fi
 
 if [ "$1" == 0 ]; then
-    g++ src/tetris.cpp src/functions.cpp -o dev -lncurses&& 
+    g++ src/tetris.cpp src/functions.cpp -o dev -lncurses && 
     rm bin/dev ;
     mv dev bin/ &&
     ./bin/dev
-fi
-
-if [ "$1" == 1 ]; then
+elif [ "$1" == 1 ]; then
     g++ -O1 src/tetris.cpp src/functions.cpp -o stable -lncurses &&
     rm bin/stable ;
     mv stable bin/ && 
     ./bin/stable
-fi
-
-if [ "$1" == 2 ]; then
+elif [ "$1" == 2 ]; then
     g++ -O3 src/tetris.cpp src/functions.cpp -o perf -lncurses &&
     rm bin/perf ;
     mv perf bin/ &&
     ./bin/perf
+else
+    echo "Wrong compilation type"
+    exit 2
 fi
 
 exit 0

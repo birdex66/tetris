@@ -1,4 +1,4 @@
-#include "src/functions.cpp"
+#include "setup.hpp"
 
 int main(){
 
