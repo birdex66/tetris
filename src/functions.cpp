@@ -1,8 +1,9 @@
 #include "setup.hpp"
 
-atomic<int> curBlock[10];
+atomic<int> curBlock[4][10];
 atomic<bool> run(true);
 mutex grid_mutex;
+static int stp;
 
 void initNcurses(){
     initscr();
@@ -12,13 +13,39 @@ void initNcurses(){
     curs_set(0);
 }
 
+void initalizePattern(int patternIndex){
+    if(patternIndex == 0) stp = 21;
+    else stp = 20;
+
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<10; ++j){
+            curBlock[i][j].store((*allBlocks[patternIndex])[i][j]);
+        }
+    }
+    // for(int k=0; k<10; ++k) curBlock[k].store(init[k]);
+}
+
 void drop(char grid[20][10]){
     while(run.load()){
+        bool backout = false;
         for(int i=0; i<20; ++i){
+            int j=0;
             unique_lock<mutex> lock(grid_mutex);
-            for(int j=0; j<10; ++j) if(curBlock[j].load()>0) grid[i][j] = '1'; 
+            for(; j<4; ++j){
+                for(int k=0; k<10; ++k){
+                    if(i+j <= stp ){
+                        if(curBlock[j][k].load()>0) grid[i+j][k] = 'X'; 
+                        else grid[i+j][k] = ' '; 
+                    }else{
+                        backout = true;
+                        break;
+                    }
+                }
+                if(backout) break;
+            }
             lock.unlock();
             this_thread::sleep_for(chrono::milliseconds(800));
+            if(backout) break;
             if(i!=19) resetGrid(grid[i]);
         }
         run.store(false);
@@ -46,26 +73,35 @@ void printGrid(char grid[20][10]){
     refresh();
 }
 
-static int index;
+static int ind;
 
 void mov(char grid[20][10]){
-    index = 3;
+    ind = 3;
     while(run.load()){
         char input = getch();
-        if(input == 'a' && index > 0) shiftLeft();
-        else if(input == 'd' && index < 6) shiftRight();
+        if(input == 'a' && ind > 0) shiftLeft();
+        else if(input == 'd' && ind < 6) shiftRight();
         printGrid(grid);
     }
 }
 
 void shiftLeft(){
-    for(int i=0; i<9; ++i) curBlock[i].store(curBlock[i+1].load()); 
-    curBlock[9].store(0);
-    --index;
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<9; ++j){
+            curBlock[i][j].store(curBlock[i][j+1].load()); 
+        }
+        curBlock[i][9].store(0);
+    }
+    --ind;
 }
 
 void shiftRight(){
-    for(int i=9; i>0; --i) curBlock[i].store(curBlock[i-1].load()); 
-    curBlock[0].store(0);
-    ++index;
+    for(int i=0; i<4; ++i){
+        for(int j=9; j>0; --j){
+            curBlock[i][j].store(curBlock[i][j-1].load()); 
+        }
+        curBlock[i][0].store(0);
+    }
+    ++ind;
 }
+

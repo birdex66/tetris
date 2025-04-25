@@ -1,8 +1,8 @@
 #include "setup.hpp"
-//atomic<int> pattern[10];
-//atomic<bool> run(true);
-//mutex grid_mutex;
 
+atomic<int> curBlock[10];
+atomic<bool> run(true);
+mutex grid_mutex;
 
 void initNcurses(){
     initscr();
@@ -12,11 +12,24 @@ void initNcurses(){
     curs_set(0);
 }
 
+initalizePattern(int patternIndex){
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<10; ++j){
+            curBlock[i][j].store(allBlocks[patternIndex][i][j]);
+        }
+    }
+    // for(int k=0; k<10; ++k) curBlock[k].store(init[k]);
+}
+
 void drop(char grid[20][10]){
     while(run.load()){
         for(int i=0; i<20; ++i){
             unique_lock<mutex> lock(grid_mutex);
-            for(int j=0; j<10; ++j) if(pattern[j].load()>0) grid[i][j] = '1'; 
+            for(int j=0; j<4; ++j){
+                for(int k=0; k<10; ++k){
+                    if(curBlock[j][k].load()>0) grid[i+k][j] = '1'; 
+                }
+            }
             lock.unlock();
             this_thread::sleep_for(chrono::milliseconds(800));
             if(i!=19) resetGrid(grid[i]);
@@ -59,13 +72,13 @@ void mov(char grid[20][10]){
 }
 
 void shiftLeft(){
-    for(int i=0; i<9; ++i) pattern[i].store(pattern[i+1].load()); 
-    pattern[9].store(0);
+    for(int i=0; i<9; ++i) curBlock[i].store(curBlock[i+1].load()); 
+    curBlock[9].store(0);
     --index;
 }
 
 void shiftRight(){
-    for(int i=9; i>0; --i) pattern[i].store(pattern[i-1].load()); 
-    pattern[0].store(0);
+    for(int i=9; i>0; --i) curBlock[i].store(curBlock[i-1].load()); 
+    curBlock[0].store(0);
     ++index;
 }

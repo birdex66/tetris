@@ -5,6 +5,8 @@
 #include <iostream>
 #include <ncurses.h>
 #include <string>
+#include <bits/stdc++.h>
+
 
 #include <array> // safer array modifications
 
@@ -14,20 +16,21 @@
 #include <mutex> // safer array access
 
 using namespace std;
-void printGrid(char grid[20][10]);
-void drop(char grid[20][10]);
-void resetGrid(char grid[20]);
+void initalizePattern(int patternIndex);
+void printGrid(char grid[23][10]);
+void drop(char grid[23][10]);
+void resetGrid(char grid[23]);
 
 void initNcurses();
 
-void mov(char grid[20][10]);
+void mov(char grid[23][10]);
 void shiftLeft();
 void shiftRight();
 
 extern atomic<bool> run;
 extern mutex grid_mutex;
 //extern atomic<int> pattern[10];
-extern atomic<int> curBlock[10];
+extern atomic<int> curBlock[4][10];
 
 static int I_block[4][10] = {
                             {0,0,0,1,1,1,1,0,0,0},
@@ -50,28 +53,37 @@ static int L_block[4][10] = {
                             {0,0,0,0,0,0,0,0,0,0}
 };
 
-static int O_block[2][10] = {
+static int O_block[4][10] = {
                             {0,0,0,0,1,1,0,0,0,0},
-                            {0,0,0,0,1,1,0,0,0,0}
-};
-
-static int S_block[3][10] = {
                             {0,0,0,0,1,1,0,0,0,0},
-                            {0,0,0,1,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
                             {0,0,0,0,0,0,0,0,0,0}
 };
 
-static int T_block[3][10] = {
+static int S_block[4][10] = {
+                            {0,0,0,0,1,1,0,0,0,0},
+                            {0,0,0,1,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0}
+};
+
+static int T_block[4][10] = {
                             {0,0,0,0,1,0,0,0,0,0},
                             {0,0,0,1,1,1,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
                             {0,0,0,0,0,0,0,0,0,0}
 };
 
 static int Z_block[4][10] = {
                             {0,0,0,0,1,1,0,0,0,0},
                             {0,0,0,0,0,1,1,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0},
                             {0,0,0,0,0,0,0,0,0,0}
 };
+
+
+static int (*allBlocks[7])[4][10] = {&I_block,&J_block,&L_block,&O_block,&S_block,&T_block,&Z_block};
+
 
 //extern atomic<int> nextBlock
 //extern atomic<int> curBlock
