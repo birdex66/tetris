@@ -17,15 +17,15 @@
 
 using namespace std;
 void initalizePattern(int patternIndex);
-void printGrid(char grid[23][10]);
+void printGrid(const char grid[23][10]);
 void drop(char grid[23][10]);
 void resetGrid(char grid[23]);
 
 void initNcurses();
 
-void mov(char grid[23][10]);
-void shiftLeft();
-void shiftRight();
+void mov(const char grid[23][10]);
+void shiftLeft(const char grid[23][10]);
+void shiftRight(const char grid[23][10]);
 
 extern atomic<bool> run;
 extern mutex grid_mutex;

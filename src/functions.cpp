@@ -2,6 +2,8 @@
 
 atomic<int> curBlock[4][10];
 atomic<bool> run(true);
+atomic<bool> paus(false);
+
 mutex grid_mutex;
 static int stp;
 static int indL;
@@ -32,28 +34,29 @@ void initalizePattern(int patternIndex){
     }
 }
 
-void drop(char grid[20][10]){
+void drop(char grid[23][10]){
     while(run.load()){
         bool backout = false;
         for(int i=0; i<20; ++i){
-            int j=0;
-            unique_lock<mutex> lock(grid_mutex);
-            for(; j<4; ++j){
-                for(int k=0; k<10; ++k){
-                    if(i+j <= stp ){
-                        if(curBlock[j][k].load()>0) grid[i+j][k] = 'X'; 
-                        else grid[i+j][k] = ' '; 
-                    }else{
-                        backout = true;
-                        break;
+            if(!(paus.load())){
+                unique_lock<mutex> lock(grid_mutex);
+                for(int j=0; j<4; ++j){
+                    for(int k=0; k<10; ++k){
+                        if(i+j <= stp ){
+                            if(curBlock[j][k].load()>0) grid[i+j][k] = 'X'; 
+                            else grid[i+j][k] = ' '; 
+                        }else{
+                            backout = true;
+                            break;
+                        }
                     }
+                    if(backout) break;
                 }
+                lock.unlock();
+                this_thread::sleep_for(chrono::milliseconds(800));
                 if(backout) break;
+                if(i!=19) resetGrid(grid[i]);
             }
-            lock.unlock();
-            this_thread::sleep_for(chrono::milliseconds(800));
-            if(backout) break;
-            if(i!=19) resetGrid(grid[i]);
         }
         run.store(false);
         this_thread::sleep_for(chrono::milliseconds(900));
@@ -66,31 +69,39 @@ void resetGrid(char grid[]){
     }
 }
 
-void printGrid(char grid[20][10]){
+void printGrid(const char grid[20][10]){
     clear();
-    string quickGrid = "";
+    //string quickGrid = "";
     for(int i=0; i<20; ++i){
-        quickGrid += '|';
-        for(int j=0; j<10; ++j) quickGrid += grid[i][j]; //.append(to_string(grid[i][j]));
-        quickGrid += "|\n";   //.append("\n");
+        //quickGrid += '|';
+        mvaddch(i,0,'|');
+        for(int j=0; j<10; ++j) /*quickGrid += grid[i][j];*/mvaddch(i,j+1,grid[i][j]);//.append(to_string(grid[i][j]));
+                                                                                      //quickGrid += "|\n";   //.append("\n");
+        mvaddch(i,11,'|');
     }
-    quickGrid += "============";
-    printw("%s",quickGrid.c_str());
-    //printw("%s",quickGrid);
+    mvprintw(20,0,"============");
+    //quickGrid += "============";
+    //printw("%s",quickGrid.c_str());
     refresh();
 }
 
 
-void mov(char grid[20][10]){
+void mov(const char grid[23][10]){
     while(run.load()){
-        char input = getch();
-        if(input == 'a' && indL > 0) shiftLeft();
-        else if(input == 'd' && indR < 9) shiftRight();
         printGrid(grid);
+        char input = getch();
+        if(input != ERR){
+            lock_guard<mutex> lock(grid_mutex);
+            paus.store(true);
+            if(input == 'a' && indL > 0) shiftLeft(grid);
+            else if(input == 'd' && indR < 9) shiftRight(grid);
+            paus.store(false);
+        }
+        //this_thread::sleep_for(chrono::milliseconds(50));
     }
 }
 
-void shiftLeft(){
+void shiftLeft(const char grid[23][10]){
     for(int i=0; i<4; ++i){
         for(int j=0; j<9; ++j){
             curBlock[i][j].store(curBlock[i][j+1].load()); 
@@ -101,7 +112,7 @@ void shiftLeft(){
     --indR;
 }
 
-void shiftRight(){
+void shiftRight(const char grid[23][10]){
     for(int i=0; i<4; ++i){
         for(int j=9; j>0; --j){
             curBlock[i][j].store(curBlock[i][j-1].load()); 

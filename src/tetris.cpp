@@ -22,7 +22,8 @@ standby:
     getch();
     
     nodelay(stdscr, TRUE);
-    timeout(5);
+    timeout(100);
+    //halfdelay(1);
 
     int swit = rand()%(6-0+1)+0; 
     initalizePattern(swit);  
@@ -38,7 +39,7 @@ standby:
     printw("Replay? (y/n)");
     refresh();
     char inp = getch();
-    if(inp == 'y') goto standby;
+    if(inp != 'n') goto standby;
     endwin();
     return 0;
 }
