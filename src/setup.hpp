@@ -22,8 +22,8 @@ void drop(char grid[23][10]);
 void resetGrid(char grid[23]);
 
 void initNcurses();
-
-void mov(const char grid[23][10]);
+void resetGrid(char grid[20][10]);
+void mov(char grid[23][10]);
 void shiftLeft(const char grid[23][10]);
 void shiftRight(const char grid[23][10]);
 
