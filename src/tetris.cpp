@@ -2,9 +2,9 @@
 
 int main(){
 
-    char grid[23][10];
+    char grid[24][10];
 
-    for(int i=0; i<23; ++i){
+    for(int i=0; i<24; ++i){
         for(int j=0; j<10; ++j){
             grid[i][j] = ' ';
         }
@@ -12,12 +12,12 @@ int main(){
 srand(time(0));
 standby:
     run.store(true);
-    resetGrid(grid[18]);
-    resetGrid(grid[19]);
+    resetGrid(grid);
     
     initNcurses();
     clear();
-    printw("Ready? (press any key)");
+    int swit = rand()%(6-0+1)+0;
+    printw("Ready? (press any key) : Pattern %i",swit);
     refresh();
     getch();
     
@@ -25,7 +25,7 @@ standby:
     timeout(100);
     //halfdelay(1);
 
-    int swit = rand()%(6-0+1)+0; 
+    //int swit = rand()%(6-0+1)+0; 
     initalizePattern(swit);  
     //for(int k=0; k<10; ++k) curBlock[k].store(init[k]);
 
