@@ -2,9 +2,9 @@
 
 int main(){
 
-    char grid[23][10];
+    char grid[24][10];
 
-    for(int i=0; i<23; ++i){
+    for(int i=0; i<24; ++i){
         for(int j=0; j<10; ++j){
             grid[i][j] = ' ';
         }
@@ -12,19 +12,20 @@ int main(){
 srand(time(0));
 standby:
     run.store(true);
-    resetGrid(grid[18]);
-    resetGrid(grid[19]);
+    resetGrid(grid);
     
     initNcurses();
     clear();
-    printw("Ready? (press any key)");
+    int swit = rand()%(6-0+1)+0;
+    printw("Ready? (press any key) : Pattern %i",swit);
     refresh();
     getch();
     
     nodelay(stdscr, TRUE);
-    timeout(5);
+    timeout(100);
+    //halfdelay(1);
 
-    int swit = rand()%(6-0+1)+0; 
+    //int swit = rand()%(6-0+1)+0; 
     initalizePattern(swit);  
 
     thread worker(drop,grid);
@@ -37,7 +38,7 @@ standby:
     printw("Replay? (y/n)");
     refresh();
     char inp = getch();
-    if(inp == 'y') goto standby;
+    if(inp != 'n') goto standby;
     endwin();
     return 0;
 }

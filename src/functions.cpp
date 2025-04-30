@@ -2,10 +2,18 @@
 
 atomic<int> curBlock[4][10];
 atomic<bool> run(true);
+atomic<bool> paus(false);
+
 mutex grid_mutex;
 static int stp;
 static int indL;
 static int indR;
+
+static int curRow;
+static int curCol;
+static int rotateState = 0;
+static int rotateLen;
+static int patternNum;
 
 void initNcurses(){
     initscr();
@@ -21,25 +29,42 @@ void initalizePattern(int patternIndex){
 
     indL = 100;
     indR = -100;
+    rotateLen = allBlocks[patternIndex].size(); 
 
     for(int i=0; i<4; ++i){
         for(int j=0; j<10; ++j){
-            int fer = (*allBlocks[patternIndex])[i][j];
+            int fer = (*allBlocks[patternIndex][rotateState])[i][j];
             curBlock[i][j].store(fer);//(*allBlocks[patternIndex])[i][j]);
             if(fer == 1 && j < indL) indL = j;
             if(fer  == 1 && j > indR) indR = j;
         }
     }
+
+    patternNum = patternIndex;
 }
 
-void drop(char grid[20][10]){
+void drop(char grid[24][10]){
     while(run.load()){
         bool backout = false;
+        curRow = 0;
+        /* logic for locking in blocks
+
+           while(paus.load()) this_thread::sleep_for(chrono::milliseconds(200));
+
+           if(canDrop()){
+           drop();
+           ++curRow;
+           }else{
+           lock();
+           }
+
+*/
+
         for(int i=0; i<20; ++i){
-            int j=0;
+            while(paus.load()) this_thread::sleep_for(chrono::milliseconds(200));
             unique_lock<mutex> lock(grid_mutex);
-            for(; j<4; ++j){
-                for(int k=0; k<10; ++k){
+            for(int j=0; j<4; ++j){
+                for(int k=0,curCol=0; k<10; ++k,++curCol){
                     if(i+j <= stp ){
                         if(curBlock[j][k].load()>0) grid[i+j][k] = 'X'; 
                         else grid[i+j][k] = ' '; 
@@ -53,40 +78,93 @@ void drop(char grid[20][10]){
             lock.unlock();
             this_thread::sleep_for(chrono::milliseconds(800));
             if(backout) break;
-            if(i!=19) resetGrid(grid[i]);
+            if(i!=19) resetGridRow(grid[i]);
+            ++curRow;
         }
         run.store(false);
-        this_thread::sleep_for(chrono::milliseconds(900));
+        this_thread::sleep_for(chrono::milliseconds(1500));
+        resetGrid(grid);
     }
 }
 
-void resetGrid(char grid[]){
+void resetGridRow(char grid[]){
     for(int j=0; j<10; ++j){
         grid[j] = ' ';
     }
 }
 
-void printGrid(char grid[20][10]){
-    clear();
-    string quickGrid = "";
+void resetGrid(char grid[24][10]){
     for(int i=0; i<20; ++i){
-        quickGrid += '|';
-        for(int j=0; j<10; ++j) quickGrid += grid[i][j]; //.append(to_string(grid[i][j]));
-        quickGrid += "|\n";   //.append("\n");
+        for(int j=0; j<10; ++j){
+            grid[i][j] = ' ';
+        }
     }
-    quickGrid += "============";
-    printw("%s",quickGrid.c_str());
-    //printw("%s",quickGrid);
+}
+
+void printGrid(const char grid[20][10]){
+    clear();
+    //string quickGrid = "";
+    for(int i=0; i<20; ++i){
+
+        //quickGrid += '|';
+        mvaddch(i,0,'|');
+        for(int j=0; j<10; ++j) /*quickGrid += grid[i][j];*/mvaddch(i,j+1,grid[i][j]);//.append(to_string(grid[i][j]));
+                                                                                      //quickGrid += "|\n";   //.append("\n");
+        mvaddch(i,11,'|');
+    }
+    mvprintw(20,0,"============");
+    //quickGrid += "============";
+    //printw("%s",quickGrid.c_str());
     refresh();
 }
 
+void refreshGrid(char grid[24][10]){
+    lock_guard<mutex> lock(grid_mutex);
+    int len = curRow + 1;
+    for(int i=curRow; i<len; ++i){
+        for(int j=0; j<4; ++j){
+            for(int k=0; k<10; ++k){
+                if(i+j <= stp){
+                    if(curBlock[j][k].load()>0) grid[i+j][k] = 'X'; 
+                    else grid[i+j][k] = ' '; 
+                }
+            }
+        } 
+        // resetGrid(grid[i]);
+    }
+}
 
-void mov(char grid[20][10]){
+void mov(char grid[24][10]){
     while(run.load()){
         char input = getch();
-        if(input == 'a' && indL > 0) shiftLeft();
-        else if(input == 'd' && indR < 9) shiftRight();
+        if(input != ERR){
+            paus.store(true);
+            //lock_guard<mutex> lock(grid_mutex);
+            bool bound = indL > 0 && indR < 9;
+            if(input == 'a' && indL > 0) shiftLeft();
+            else if(input == 'd' && indR < 9) shiftRight();
+            else if(input == 's' && indR < 9) rotate(1);//&& canRotateLeft()) rotateLeft();
+            else if(input == 'w' && indL > 0) rotate(-1);//&& canRotateRight()) rotateRight();
+            refreshGrid(grid);
+        }
         printGrid(grid);
+        paus.store(false);
+
+        //this_thread::sleep_for(chrono::milliseconds(50));
+    }
+}
+
+void rotate(const int change){
+    rotateState += change;
+    indL = 100;
+    indR = -100;
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<10; ++j){
+            int fer = (*allBlocks[patternNum][rotateState % rotateLen])[i][j];
+            curBlock[i][j].store(fer);//(*allBlocks[patternIndex])[i][j]);
+            if(fer == 1 && j < indL) indL = j;
+            if(fer  == 1 && j > indR) indR = j;
+        }
     }
 }
 
