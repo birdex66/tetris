@@ -15,17 +15,17 @@ if [ "$1" == 0 ]; then
     g++ src/tetris.cpp src/functions.cpp -o dev -lncurses && 
     rm bin/dev ;
     mv dev bin/ &&
-    ./bin/dev
+    gnome-terminal -- ./bin/dev
 elif [ "$1" == 1 ]; then
     g++ -O1 src/tetris.cpp src/functions.cpp -o stable -lncurses &&
     rm bin/stable ;
     mv stable bin/ && 
-    ./bin/stable
+    gnome-terminal -- ./bin/stable
 elif [ "$1" == 2 ]; then
     g++ -O3 src/tetris.cpp src/functions.cpp -o perf -lncurses &&
     rm bin/perf ;
     mv perf bin/ &&
-    ./bin/perf
+    gnome-terminal -- ./bin/perf
 else
     echo "Wrong compilation type"
     exit 2

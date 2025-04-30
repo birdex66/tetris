@@ -26,7 +26,6 @@ standby:
 
     int swit = rand()%(6-0+1)+0; 
     initalizePattern(swit);  
-    //for(int k=0; k<10; ++k) curBlock[k].store(init[k]);
 
     thread worker(drop,grid);
     thread listen(mov,grid);

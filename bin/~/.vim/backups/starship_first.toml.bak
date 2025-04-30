@@ -1,0 +1,28 @@
+# ~/.config/starship_first.toml
+# Use custom format for the prompt
+format = '''
+[┌](bold porple)[ 🗀  ]()$directory$rust$package
+[└─](bold porple)[birdex@DESKTOP-IE4HCIV](bold green)[─>>](bold blaur) '''
+# Wait 10 milliseconds for starship to check files under the current directory.
+scan_timeout = 10  # <-- Fix here: set it as a string
+
+# Disable the blank line at the start of the prompt
+add_newline = false
+
+# Set 'foo' as custom color palette
+palette = 'foo'
+
+# Define custom colors
+[palettes.foo]
+blue = '21'
+mustard = '#af8700'
+blaur = '#6fd5e7'
+porple = '#8563a2'
+pank = '#4d2a4e'
+gween = '#70a15b'
+owang = '#d99853'
+
+[directory]
+style = "owang italic"
+truncation_length = 8
+truncate_to_repo = false
