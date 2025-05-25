@@ -104,3 +104,4 @@ XX
  X
 
 
+store all rotate states and bounds in a object we can reference at runtime

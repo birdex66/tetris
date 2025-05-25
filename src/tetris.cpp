@@ -11,6 +11,7 @@ int main(){
     }
 srand(time(0));
 standby:
+    resetState();
     run.store(true);
     resetGrid(grid);
     

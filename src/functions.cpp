@@ -8,6 +8,9 @@ mutex grid_mutex;
 static int stp;
 static int indL;
 static int indR;
+static vector<bPattern> blocks;
+static bPattern* adminBlock;
+
 
 static int curRow;
 static int curCol;
@@ -23,6 +26,7 @@ void initNcurses(){
     curs_set(0);
 }
 
+/*
 void initalizePattern(int patternIndex){
     if(patternIndex == 0) stp = 21;
     else stp = 20;
@@ -40,8 +44,40 @@ void initalizePattern(int patternIndex){
         }
     }
 
+    for(int k=0; k<3; ++k) shiftRight();
     patternNum = patternIndex;
 }
+*/
+
+void initalizePattern(int patternIndex){
+    rotateLen = allBlocks[patternIndex].size();
+    //blocks.resize(rotateLen);
+    if(patternIndex == 0) stp = 21;
+    else stp = 20;
+
+    for(int i=0; i<rotateLen; ++i){
+        blocks.push_back(bPattern(allBlocks[patternIndex][i]));
+    }
+
+    adminBlock = &blocks[0];
+
+    const int (*arr)[10] = adminBlock->getShape();
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<10; ++j){
+            curBlock[i][j].store(arr[i][j]);
+        }
+    }
+    
+    curCol = 3;
+    shiftRight(3);
+    indL = curCol;
+    indR = curCol + (adminBlock->getIndR() - adminBlock->getIndL());
+    patternNum = patternIndex;
+    
+}
+
+void resetState(){blocks.clear();}
+
 
 void drop(char grid[24][10]){
     while(run.load()){
@@ -58,16 +94,17 @@ void drop(char grid[24][10]){
            lock();
            }
 
-*/
+        */
 
         for(int i=0; i<20; ++i){
             while(paus.load()) this_thread::sleep_for(chrono::milliseconds(200));
             unique_lock<mutex> lock(grid_mutex);
+            int j=0;
             for(int j=0; j<4; ++j){
-                for(int k=0,curCol=0; k<10; ++k,++curCol){
-                    if(i+j <= stp ){
+                for(int k=0; k<10; ++k){
+                    if(i+j <= stp){
                         if(curBlock[j][k].load()>0) grid[i+j][k] = 'X'; 
-                        else grid[i+j][k] = ' '; 
+                        else grid[i+j][k] = ' ';
                     }else{
                         backout = true;
                         break;
@@ -75,10 +112,12 @@ void drop(char grid[24][10]){
                 }
                 if(backout) break;
             }
+            //adminBlock->dropBlock();
             lock.unlock();
             this_thread::sleep_for(chrono::milliseconds(800));
             if(backout) break;
-            if(i!=19) resetGridRow(grid[i]);
+            if(i+(adminBlock->getBottom()-adminBlock->getTop())<19) resetGridRow(grid[i]);
+            else break;
             ++curRow;
         }
         run.store(false);
@@ -140,10 +179,14 @@ void mov(char grid[24][10]){
         if(input != ERR){
             paus.store(true);
             //lock_guard<mutex> lock(grid_mutex);
-            bool bound = indL > 0 && indR < 9;
-            if(input == 'a' && indL > 0) shiftLeft();
-            else if(input == 'd' && indR < 9) shiftRight();
-            else if(input == 's' && indR < 9) rotate(1);//&& canRotateLeft()) rotateLeft();
+            //bool bound = indL > 0 && indR < 9;
+            if(input == 'a' && indL > 0){
+                shiftLeft(1);
+                --curCol;
+            }else if(input == 'd' && indR < 9){
+                shiftRight(1);
+                ++curCol;
+            }else if(input == 's' && indR < 9) rotate(1);//&& canRotateLeft()) rotateLeft();
             else if(input == 'w' && indL > 0) rotate(-1);//&& canRotateRight()) rotateRight();
             refreshGrid(grid);
         }
@@ -153,22 +196,77 @@ void mov(char grid[24][10]){
         //this_thread::sleep_for(chrono::milliseconds(50));
     }
 }
-
-void rotate(const int change){
+/*
+inline void rotate(const int change){
     rotateState += change;
-    indL = 100;
-    indR = -100;
+    indL = 10;
+    indR = -1;
     for(int i=0; i<4; ++i){
         for(int j=0; j<10; ++j){
-            int fer = (*allBlocks[patternNum][rotateState % rotateLen])[i][j];
-            curBlock[i][j].store(fer);//(*allBlocks[patternIndex])[i][j]);
-            if(fer == 1 && j < indL) indL = j;
-            if(fer  == 1 && j > indR) indR = j;
+            int fer = (*allBlocks[patternNum][abs(rotateState) % rotateLen])[i][j];
+            curBlock[i][j].store(fer);
+            if(fer == 1){
+                if(j < indL) indL = j;
+                if(j > indR) indR = j;
+            }
         }
     }
 }
+*/
+inline void rotate(const int change){
+    rotateState += change;
+    adminBlock = &blocks[abs(rotateState)%rotateLen];
+    
+    const int (*arr)[10] = adminBlock->getShape();
+    int newIndL = adminBlock->getIndL();
+    int newIndR = adminBlock->getIndR();
 
-void shiftLeft(){
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<10; ++j){
+            curBlock[i][j].store(arr[i][j]);
+        }
+    }
+    int shiftAmount = curCol - newIndL;
+   
+    if(shiftAmount + newIndR > 9) shiftAmount = 9 - newIndR;
+    if(shiftAmount < 0) shiftAmount = 0;
+
+    if(shiftAmount > 0) shiftRight(shiftAmount);
+    else if(shiftAmount < 0) shiftLeft(-shiftAmount);
+
+    indL = newIndL + shiftAmount;
+    indR = newIndR + shiftAmount;
+}
+
+inline void shiftLeft(int change){
+    for(int i=0; i<4; ++i){
+        for(int j=0; j<10-change; ++j){
+            curBlock[i][j].store(curBlock[i][j+change].load()); 
+        }
+        for(int k=10-change; k<10; ++k){
+            curBlock[i][k].store(0); 
+        }
+    }
+    indL -= change;
+    indR -= change;
+}
+
+inline void shiftRight(int change){
+    for(int i=0; i<4; ++i){
+        for(int j=9; j>=change; --j){
+            curBlock[i][j].store(curBlock[i][j-change].load()); 
+        }
+        for(int k=0; k<change; ++k){
+            curBlock[i][k].store(0); 
+        }
+    }
+    indL += change;
+    indR += change;
+}
+
+
+/*
+inline void shiftLeft(){
     for(int i=0; i<4; ++i){
         for(int j=0; j<9; ++j){
             curBlock[i][j].store(curBlock[i][j+1].load()); 
@@ -179,7 +277,7 @@ void shiftLeft(){
     --indR;
 }
 
-void shiftRight(){
+inline void shiftRight(){
     for(int i=0; i<4; ++i){
         for(int j=9; j>0; --j){
             curBlock[i][j].store(curBlock[i][j-1].load()); 
@@ -189,4 +287,5 @@ void shiftRight(){
     ++indL;
     ++indR;
 }
+*/
 
